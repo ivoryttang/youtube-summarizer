@@ -9,8 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.44.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security",
+    "langchain": "^0.0.100",
     "next": "14.2.5",
+    "path": "^0.12.7",
     "react": "^18",
     "react-dom": "^18"
   },

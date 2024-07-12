@@ -23,7 +23,6 @@ export default function Examples({ summary, chapters, questions }: { summary: st
       content:  ""
     },
   ];
-  const [TextToImageModalOpen, setTextToImageModalOpen] = useState(false);
 
   const [expandedItems, setExpandedItems] = useState<{ [key: string]: boolean }>({});
 

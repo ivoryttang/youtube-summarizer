@@ -1,8 +1,5 @@
-import Image from "next/image";
 import Navbar from "@/components/Navbar";
-import Examples from "@/components/Examples";
 import QAModal from "@/components/QAModel";
-import ChatInterface from "@/components/ChatInterface";
 
 
 export default function Home() {

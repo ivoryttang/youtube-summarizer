@@ -1,21 +1,13 @@
 "use client"
-import { Fragment, useState,useEffect } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-// import { useChat } from "ai/react";
+import { useState,useEffect } from "react";
 import axios from 'axios';
 import Examples from "./Examples";
 import React from 'react';
-import { OpenAI } from 'openai';
 import ChatInterface from "./ChatInterface";
 
 export default function QAModal() {
-//   const { completion, input, isLoading, handleInputChange, handleSubmit } = useChat()  
-  // useCompletion({
-    //   api: "/api/qa-pg-vector",
-    // });
     const [name, setName] = useState("Attention is All You Need")
     const [input, setInput] = useState("")
-    const [transcript, setTranscript] = useState("")
     const [summary, setSummary] = useState("")
     const [chapters, setChapters] = useState("")
     const [questions, setQuestions] = useState("")
@@ -27,7 +19,7 @@ export default function QAModal() {
 
     async function fetchSummary(videoId:string | null) {
         try {
-          const response = await axios.get(`http://localhost:3001/api/getSummary?videoId=${videoId}`);
+          const response = await axios.get(`http://localhost:3001/youtube/getSummary?videoId=${videoId}`);
           console.log(response)
           return response.data
         } catch (error) {
@@ -37,7 +29,7 @@ export default function QAModal() {
     
     async function fetchChapters(videoId:string | null) {
         try {
-            const response = await axios.get(`http://localhost:3001/api/getChapters?videoId=${videoId}`);
+            const response = await axios.get(`http://localhost:3001/youtube/getChapters?videoId=${videoId}`);
             console.log(response)
             return response.data
         } catch (error) {
@@ -47,11 +39,21 @@ export default function QAModal() {
 
     async function fetchQuestions(videoId:string | null) {
         try {
-          const response = await axios.get(`http://localhost:3001/api/getQuestions?videoId=${videoId}`);
+          const response = await axios.get(`http://localhost:3001/youtube/getQuestions?videoId=${videoId}`);
           console.log(response)
           return response.data
         } catch (error) {
           console.error('Error fetching transcript:', error);
+        }
+      }
+
+    async function embedVideoContent(videoId:string | null) {
+        try {
+          console.log("embeddings generating")
+          const embedResponse = await axios.post(`http://localhost:3001/chat/process-docs?videoId=${videoId}`);
+          console.log(embedResponse.data);
+        } catch (error) {
+          console.error('Error embedding:', error);
         }
       }
 
@@ -62,11 +64,11 @@ export default function QAModal() {
         const videoId = extractVideoId(input);
         const summary  = await fetchSummary(videoId)
         setSummary(summary)
-        const chapters  = await fetchChapters(videoId)
-        setChapters(chapters)
-        const questions  = await fetchQuestions(videoId)
-        setQuestions(questions)
-
+        // const chapters  = await fetchChapters(videoId)
+        // setChapters(chapters)
+        // const questions  = await fetchQuestions(videoId)
+        // setQuestions(questions)
+        embedVideoContent(videoId)
       } catch (error) {
         console.error('Error submitting question:', error);
       }
@@ -85,15 +87,11 @@ export default function QAModal() {
           if (!videoId) {
             throw new Error('Invalid YouTube URL');
           }
-          // Rest of your code...
         } catch (error) {
           console.error('Error:', error);
-          // Handle the error state appropriately here
-          // For example, you could update the state to show an error message
-          // or you could return a default value.
         }
       
-        const apiUrl = `http://localhost:3001/api/videoTitle?videoId=${videoId}`;
+        const apiUrl = `http://localhost:3001/youtube/videoTitle?videoId=${videoId}`;
       
         try {
           const response = await axios.get(apiUrl);
@@ -143,36 +141,6 @@ export default function QAModal() {
                         />
                       </p>
                     </div>
-                    {/* {completion && (
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-200">{completion}</p>
-                      </div>
-                    )}
-
-                    {isLoading && !completion && (
-                      <p className="flex items-center justify-center mt-4">
-                        <svg
-                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                      </p>
-                    )} */}
                   </div>
                 </div>
             

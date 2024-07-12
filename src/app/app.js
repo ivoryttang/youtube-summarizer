@@ -19,8 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parse URL-encoded bodies
 const youtubeRoutes = require('./routes/youtube');
 const chatRoutes = require('./routes/chat');
 
-// Use routes with '/api' prefix
-app.use('/api', youtubeRoutes);
+app.use('/youtube', youtubeRoutes);
 app.use('/chat', chatRoutes);
 
 // Error handling middleware

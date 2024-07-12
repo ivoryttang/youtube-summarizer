@@ -127,8 +127,14 @@ async def main():
 
     command = sys.argv[1]
     video_id = sys.argv[2]
-
-    if command == "summarize_transcript":
+    if command == "get_transcript":
+        try:
+            transcript = get_transcript(video_id)
+            print(transcript)
+        except Exception as e:
+            logging.error(f"An error occurred during summarization: {e}")
+            sys.exit(1)  # Exit with an error code
+    elif command == "summarize_transcript":
         try:
             summary = await summarize_transcript(video_id)
             print(summary)
@@ -142,14 +148,15 @@ async def main():
         except Exception as e:
             logging.error(f"An error occurred during questions: {e}")
             sys.exit(1)  # Exit with an error code
-    else:
+    elif command == "chapters_summary":
         try:
             chapters = await chapters_summary(video_id)
             print(chapters)
         except Exception as e:
             logging.error(f"An error occurred during chapters: {e}")
             sys.exit(1)  # Exit with an error code
-
+    else:
+        pass
 
 if __name__ == "__main__":
     asyncio.run(main())
