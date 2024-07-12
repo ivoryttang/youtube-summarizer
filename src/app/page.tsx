@@ -2,6 +2,8 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Examples from "@/components/Examples";
 import QAModal from "@/components/QAModel";
+import ChatInterface from "@/components/ChatInterface";
+
 
 export default function Home() {
   return (
@@ -15,9 +17,7 @@ export default function Home() {
             <p className="mx-auto mt-4 max-w-xl text-center text-xl leading-8 text-slate-400">
             Digest Lectures and Talks on Youtube with helpful summaries and chatbot q&a over long content
             </p>
-    
             <QAModal />
-    
             <svg
               viewBox="0 0 1024 1024"
               className="absolute left-1/2 h-[64rem] w-[64rem] -translate-x-1/2"

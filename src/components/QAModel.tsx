@@ -6,6 +6,7 @@ import axios from 'axios';
 import Examples from "./Examples";
 import React from 'react';
 import { OpenAI } from 'openai';
+import ChatInterface from "./ChatInterface";
 
 export default function QAModal() {
 //   const { completion, input, isLoading, handleInputChange, handleSubmit } = useChat()  
@@ -18,6 +19,7 @@ export default function QAModal() {
     const [summary, setSummary] = useState("")
     const [chapters, setChapters] = useState("")
     const [questions, setQuestions] = useState("")
+    const [open, setOpen] = useState(false)
 
     function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
       setInput(event.target.value);
@@ -79,11 +81,18 @@ export default function QAModal() {
       async function getYouTubeVideoTitle(url: string): Promise<string> {
         const videoId = extractVideoId(url);
         
-        if (!videoId) {
-          throw new Error('Invalid YouTube URL');
+        try {
+          if (!videoId) {
+            throw new Error('Invalid YouTube URL');
+          }
+          // Rest of your code...
+        } catch (error) {
+          console.error('Error:', error);
+          // Handle the error state appropriately here
+          // For example, you could update the state to show an error message
+          // or you could return a default value.
         }
       
-        // const apiUrl = `/api/videoTitle?videoId=${videoId}`;
         const apiUrl = `http://localhost:3001/api/videoTitle?videoId=${videoId}`;
       
         try {
@@ -102,33 +111,8 @@ export default function QAModal() {
         return (match && match[7].length === 11) ? match[7] : null;
       }
   return (
-    <Transition.Root show={true} as={Fragment}>
-      <Dialog as="div" onClose={() => {}} className="relative" >
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="bg-gray-95 transition-opacity" />
-        </Transition.Child>
-
-        <div className="fixed inset-x-0 top-[15rem]">
-          <div className="flex items-end justify-center p-2 text-center sm:items-center sm:p-0">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:p-3 w-full max-w-3xl">
-                <div>
+    <>
+      <div className="bg-slate-800 p-4 mt-5 rounded">
                   <form onSubmit={handleSubmitVideo}>
                     <input
                       placeholder="https://www.youtube.com/watch?v=iDulhoQ2pro"
@@ -147,6 +131,16 @@ export default function QAModal() {
                         >
                           {name}
                         </a>
+                        <button
+                          onClick={() => setOpen(true)}
+                          className="ml-4 rounded-md bg-sky-500 px-4 py-1 text-sm font-medium text-white shadow hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                        >
+                          Click to Chat
+                        </button>
+                        <ChatInterface
+                          open={open}
+                          setOpen={setOpen}
+                        />
                       </p>
                     </div>
                     {/* {completion && (
@@ -181,17 +175,12 @@ export default function QAModal() {
                     )} */}
                   </div>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-        
-      </Dialog>
-      <div className="mt-32 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 16em)' }}>
+            
+      
+      <div className="mt-10 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 16em)' }}>
       <Examples summary={summary} chapters={chapters} questions={questions}/>
       </div>
-    </Transition.Root>
     
-    
+    </>
   );
 }

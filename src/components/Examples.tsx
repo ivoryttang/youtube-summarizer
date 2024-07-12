@@ -56,7 +56,14 @@ export default function Examples({ summary, chapters, questions }: { summary: st
 
               <dd className="text-sm text-slate-400">
               {expandedItems[example.name] ? example.content : example.content.slice(0, 1000)}
-              {example.name == "Notes" ? <textarea className="w-full h-full" />: <></>}
+              {example.name == "Notes" ? (
+                <textarea
+                  className="w-full h-full p-10 bg-slate-800 text-white placeholder-slate-400"
+                  placeholder="Jot your own notes here"
+                />
+              ) : (
+                <></>
+              )}
               <button
                 onClick={() => toggleSummary(example.name)}
                 className="mt-2 text-sm text-sky-500 hover:underline"

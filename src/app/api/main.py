@@ -84,8 +84,16 @@ async def chapters_summary(video_id):
         
         # Process each chunk asynchronously
         chapters = await asyncio.gather(*(summarize_chapters_and_topics(chunk) for chunk in chunks))
-        # Combine the summaries
-        return ' '.join(chapters)
+
+        response = await openai.ChatCompletion.acreate(
+            model='gpt-4',
+            messages=[
+                {"role": "system", "content": "Return the following content but renumber the chapters from 1 to n instead of starting over from 1 every time. Also add new line after each chapter and its content."},
+                {"role": "user", "content": ' '.join(chapters)}
+            ],
+        )
+        return response.choices[0].message['content']
+    
     except Exception as e:
         return str(e)
 
@@ -98,8 +106,16 @@ async def generate_questions(video_id):
         
         # Process each chunk asynchronously
         questions = await asyncio.gather(*(summarize_key_questions(chunk) for chunk in chunks))
-        # Combine the summaries
-        return ' '.join(questions)
+        
+        response = await openai.ChatCompletion.acreate(
+            model='gpt-4',
+            messages=[
+                {"role": "system", "content": "Return the following content but renumber the questions from 1 to n instead of starting over from 1 every time. Also add new line after each question."},
+                {"role": "user", "content": ' '.join(questions)}
+            ],
+        )
+        return response.choices[0].message['content']
+        
     except Exception as e:
         return str(e)
 
