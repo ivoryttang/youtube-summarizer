@@ -1,4 +1,4 @@
-You Tu Be Smart
+## You Tu Be Smart
 Digest Lectures and Talks on Youtube with helpful summaries and chatbot q&a over long content
 
 It can:
