@@ -1,10 +1,8 @@
-import dotenv from "dotenv";
-
-dotenv.config();
-import axios from 'axios';
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect, useRef, useCallback  } from "react";
 import { Transition, Dialog } from '@headlessui/react';
 import { useCompletion } from "ai/react";
+import axios from "axios";
+
 
 export default function ChatInterface({
   open,
@@ -17,6 +15,99 @@ export default function ChatInterface({
     useCompletion({
       api: "http://localhost:3001/chat/vector-qa",
     });
+    const [isAudioPlayed, setIsAudioPlayed] = useState(false);
+    const [play, setPlay] = useState(false);
+
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+
+    const playAudio = useCallback(async (audioData: Uint8Array) => {
+        console.log("playAudio called with data length:", audioData.length);
+        try {
+            if (!audioContextRef.current) {
+                audioContextRef.current = new AudioContext();
+              }
+          
+              if (audioContextRef.current.state === 'suspended') {
+                await audioContextRef.current.resume();
+              }
+              
+              const audioBuffer = processAudioData(audioData, 44100);
+              sourceRef.current = audioContextRef.current.createBufferSource();
+              sourceRef.current.buffer = audioBuffer;
+              sourceRef.current.connect(audioContextRef.current.destination);
+          
+              sourceRef.current.onended = () => {
+                setIsAudioPlayed(false);
+                cleanup();
+              };
+          
+              sourceRef.current.start();
+              console.log("Audio playback started");
+        } catch (err) {
+          console.error('Error playing audio:', err);
+          cleanup();
+        }
+      }, [isAudioPlayed]);
+
+    
+      
+    const fetchTTSData = async () => {
+        console.log("HEREEE",completion)
+        
+        
+        try {
+                const apiUrl = `http://localhost:3001/chat/tts?transcript=${completion}`;
+                const response = await axios.post(apiUrl);
+                
+                const audioDataArray = Object.values(response.data).map(Number);
+                const audioData = new Uint8Array(audioDataArray);
+                await playAudio(audioData)
+          } catch (err) {
+            console.error('Error fetching TTS data:', err);
+            cleanup();
+          }
+      };
+      
+      const processAudioData = (audioData: Uint8Array, sampleRate = 44100) => {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+        }
+        const audioBuffer = audioContextRef.current.createBuffer(1, audioData.length / 4, sampleRate);
+        const channelData = audioBuffer.getChannelData(0);
+      
+        const float32Array = new Float32Array(audioData.buffer);
+        channelData.set(float32Array);
+      
+        return audioBuffer;
+      };
+      
+      
+      
+      const cleanup = () => {
+        if (sourceRef.current) {
+          sourceRef.current.onended = null;
+          sourceRef.current.stop();
+          sourceRef.current.disconnect();
+          sourceRef.current = null;
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        }
+        setIsAudioPlayed(false);
+      };
+      
+      useEffect(() => {
+        return () => {
+          cleanup();
+        };
+      }, []);
+    
+
+
+
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={setOpen}>
@@ -56,7 +147,12 @@ export default function ChatInterface({
                   <div className="mt-3">
                     <div className="my-2">
                       <p className="text-sm text-gray-500">
-                        Powered by GPT-4 and Cartesia TTS
+                        Powered by GPT-4 and Cartesia TTS <button onClick={()=> {fetchTTSData();  setPlay(!play)}} className="ml-2 hover:underline">{play ? <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-4">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+</svg> : <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-4">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+</svg> }
+</button>
                       </p>
                     </div>
                   </div>
@@ -65,7 +161,8 @@ export default function ChatInterface({
                       <div className="mt-2">
                         <p className="text-sm text-gray-200">{completion}</p>
                       </div>
-                    )}
+                )}
+                    
                 {isLoading && (
                   <p className="flex items-center justify-center mt-4">
                     <svg

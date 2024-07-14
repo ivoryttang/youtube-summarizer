@@ -8,9 +8,8 @@ const { createClient } = require("@supabase/supabase-js");
 const { RecursiveCharacterTextSplitter } = require("langchain/text_splitter"); // Adjust this based on actual structure
 const { OpenAI } = require("langchain/llms/openai");
 const { VectorDBQAChain } = require("langchain/chains");
-const { LangChainStream } = require("ai");
+const { StreamingTextResponse, LangChainStream } = require("ai");
 const { CallbackManager } = require("langchain/callbacks");
-const { Readable } = require('stream');
 
 
 const fs = require("fs");
@@ -95,6 +94,87 @@ router.post("/process-docs", async (req, res) => {
   }
 });
 
+router.post('/tts', async (req, res) => {
+  const options = {
+    method: 'POST',
+    headers: {
+      'Cartesia-Version': '2024-06-10',
+      'X-API-Key': process.env.CARTESIA_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model_id: 'sonic-english',
+      transcript: req.query.transcript || "",
+      duration: req.query.duration || 123,
+      voice: req.query.voice || {
+        mode: 'id',
+        id: 'a0e99841-438c-4a64-b679-ae501e7d6091'
+      },
+      output_format: req.body.output_format || {
+        container: 'wav',
+        encoding: 'pcm_f32le',
+        sample_rate: 44100
+      },
+      language: req.body.language || 'en'
+    })
+  };
+
+  try {
+    const response = await fetch('https://api.cartesia.ai/tts/sse', options);
+
+    if (response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let done = false;
+      let buffer = '';
+      
+      let allAudioData = new Uint8Array();
+ 
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
+
+          let boundary = buffer.indexOf('\n');
+          while (boundary !== -1) {
+            const jsonString = buffer.substring(0, boundary);
+            buffer = buffer.substring(boundary + 1);
+            if (jsonString.trim()) {
+              
+              const jsonChunk = JSON.parse(jsonString.slice(5));
+              
+              if (jsonChunk.done) {
+                done = true;
+                break;
+              }
+              const base64Data = jsonChunk.data;
+              const binaryString = atob(base64Data);
+              const binaryLen = binaryString.length;
+              const bytes = new Uint8Array(binaryLen);
+              for (let i = 0; i < binaryLen; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              // Concatenate audio data
+              const newAudioData = new Uint8Array(allAudioData.length + bytes.length);
+              newAudioData.set(allAudioData);
+              newAudioData.set(bytes, allAudioData.length);
+              allAudioData = newAudioData;
+            }
+            boundary = buffer.indexOf('\n');
+          }
+        }
+      }
+
+      res.json(allAudioData);
+    }
+  } catch (error) {
+    console.error('Error fetching TTS data:', error);
+    res.status(500).send('Server Error');
+  }
+});
+
 router.post('/vector-qa', async (req, res) => {
   try {
     
@@ -136,22 +216,30 @@ router.post('/vector-qa', async (req, res) => {
     });
     
     chain.call({ query: prompt });
-    console.log("done")
     const reader = stream.getReader();
     res.setHeader('Content-Type', 'application/octet-stream'); // Set the correct content type
 
-    // Function to handle reading from the stream
-    async function processText() {
+
+  async function processText() {
+    try {
       const { done, value } = await reader.read();
       if (done) {
-        res.end();
+        res.end(); // Finalize the response when the stream is done
         return;
       }
-      res.write(Buffer.from(value));
-      await processText(); // Recursively call processText to read next chunk
+      res.write(value); // Use res.write to send chunks of data
+      // Call processText again to handle the next chunk
+      processText();
+    } catch (error) {
+      console.error('Error in processText:', error);
+      res.status(500).send('Error processing text');
     }
+  }
 
-    await processText(); // Start the reading process
+  
+  await processText();
+
+
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('Internal Server Error');

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cartesia/cartesia-js": "^1.0.0",
     "@supabase/supabase-js": "^2.44.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

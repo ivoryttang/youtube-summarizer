@@ -1,7 +1,7 @@
 "use client"
 import { useState,useEffect } from "react";
 import axios from 'axios';
-import Examples from "./Examples";
+import Summaries from "./Summaries";
 import React from 'react';
 import ChatInterface from "./ChatInterface";
 
@@ -64,10 +64,10 @@ export default function QAModal() {
         const videoId = extractVideoId(input);
         const summary  = await fetchSummary(videoId)
         setSummary(summary)
-        // const chapters  = await fetchChapters(videoId)
-        // setChapters(chapters)
-        // const questions  = await fetchQuestions(videoId)
-        // setQuestions(questions)
+        const chapters  = await fetchChapters(videoId)
+        setChapters(chapters)
+        const questions  = await fetchQuestions(videoId)
+        setQuestions(questions)
         embedVideoContent(videoId)
       } catch (error) {
         console.error('Error submitting question:', error);
@@ -146,7 +146,7 @@ export default function QAModal() {
             
       
       <div className="mt-10 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 16em)' }}>
-      <Examples summary={summary} chapters={chapters} questions={questions}/>
+      <Summaries summary={summary} chapters={chapters} questions={questions}/>
       </div>
     
     </>
