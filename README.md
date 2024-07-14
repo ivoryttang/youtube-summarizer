@@ -9,7 +9,7 @@ It can:
 
 → It can also read the generated summaries and explanations aloud using Cartesia's lightning fast TTS model.
 
-Configuration
+## Configuration
 You'll need to set your API keys for OpenAI, Youtube, and Cartesia locally.
 
 ## Getting Started
@@ -29,3 +29,9 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 Run node app.js to run the server.
+
+
+
+
+https://github.com/user-attachments/assets/172ddecd-6edd-4715-b4ee-0361e60bdd96
+
